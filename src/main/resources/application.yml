@@ -1,63 +1,83 @@
 server:
   port: 8989
 
+#keycloak:
+#  realm: rohi-realm
+#  auth-server-url: http://localhost:8080
+#  resource: springboot
+#  public-client: true
+#  bearer-only: true
+
+#spring:
+#  security:
+#    oauth2:
+#      resourceserver:
+#        jwt:
+#          issuer-uri: http://localhost:8080/realms/Alibou
+#          jwk-set-uri: ${spring.security.oauth2.resourceserver.jwt.issuer-uri}/protocol/openid-connect/certs
 
 spring:
-  application:
-    name: GATEWAY-SERVICE
+  main:
+    allow-bean-definition-overriding: true
   cloud:
     gateway:
-      routes:
-       - id: order-service
-         uri: lb://ORDER-SERVICE
-         predicates:
-           - Path=/order/**
-         filters:
-           - name: CircuitBreaker
-             args:
-               name: order-service
-               fallBackUri: forward:/orderFallBack
+      discovery:
+        enabled: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/rohi_realm
+          jwk-set-uri: ${spring.security.oauth2.resourceserver.jwt.issuer-uri}/protocol/openid-connect/certs
 
-       - id: payment-service
-         uri: lb://PAYMENT-SERVICE
-         predicates:
-           - Path=/payment/**
-         filters:
-           - name: CircuitBreaker
-             args:
-               name: payment-service
-               fallBackUri: forward:/paymentFallBack
+jwt:
+  auth:
+    converter:
+      resource-id: springboot
+      principal-attribute: preferred_username
+#      routes:
+#        - id: order-service
+#          uri: lb://ORDER-SERVICE
+#          predicates:
+#            - Path=/order/**
+#        - id: payment-service
+#          uri: lb://PAYMENT-SERVICE
+#          predicates:
+#            - Path=/payment/**
 
-#actuator settings
+#
+#  zipkin:
+#    base-url: http://localhost:9411/
+
+#management:
+#  tracing:
+#    sampling:
+#      probability: 1.0
+
 management:
-  health:
-    circuitBreakers:
-      enabled: true
+  server:
+    port: 8050
   endpoints:
     web:
       exposure:
-        include: health
+        include: "*"
   endpoint:
-    health:
-      show-details: always
+    gateway:
+      enabled: true
+  info:
+    env:
+      enabled: true
 
-resilience4j:
-  circuitbreaker:
-    instances:
-      GATEWAY-SERVICE:
-        registerHealthIndicator: true
-        eventConsumerBufferSize: 10
-        failureRateThreshold: 60
-        minimumNumberOfCalls: 6
-        permittedNumberOfCallsInHalfOpenState: 3
-        slidingWindowSize: 10
-        slidingWindowType: COUNT_BASED
 
-eureka:
-  client:
-    register-with-eureka : true
-    fetch-registry : true
-    service-url:
-      defaultZone : http://localhost:8761/eureka/
-      instance:
-        hostname : localhost
+info:
+  app:
+    name: "gatewayserver"
+    description: "E-Commerce Gateway Server Application"
+    version: "1.0.0"
+
+
+
+
+
+
+
